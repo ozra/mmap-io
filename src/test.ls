@@ -8,7 +8,6 @@ mmap =      require "./mmap-io"
 assert =    require "assert"
 constants = require "constants"
 #errno =     require "errno"
-errno = errno: []   # foo.... *TODO*
 
 say = (...args) -> console.log.apply console, args
 
@@ -40,24 +39,31 @@ say "Give advise with 4 args"
 mmap.advise buffer, 0, mmap.PAGESIZE, mmap.MADV_NORMAL
 
 # Read the data..
-say "\n\nBuffer contents, read byte for byte backwards, stringified is:\n"
-out = ""
-for ix from (size - 1) to 0 by -1
-    out += String.from-char-code(buffer[ix])
+# *todo* this isn't really helpful as a test..
+say "\n\nBuffer contents, read byte for byte backwards:\n"
+try
+    out = ""
+    for ix from (size - 1) to 0 by -1
+        out += String.from-char-code(buffer[ix])
 
-say out, "\n\n"
+    #say out, "\n\n"
+catch e
+    assert false, "Shit happened while reading from buffer"
 
 try
-    say "read out of bounds test:", buffer[size + 47]
+    say "read out of bounds test"
+    assert typeof( buffer[size + 47] ) == "undefined"
+
 catch e
-    say "caught deliberate out of bounds exception- does this thing happen?", e.code, errno.errno[e.code], 'err-obj = ', e
+    say "caught deliberate out of bounds exception - does this thing happen?", e.code, 'err-obj = ', e
+
 
 # Ok, I won't write a segfault catcher cause that would be evil, so this will simply be uncatchable.. /ORC
 #try
 #    say "Try to write to read buffer"
 #    buffer[0] = 47
 #catch e
-#    say "caught deliberate segmentation fault", e.code, errno.errno[e.code], 'err-obj = ', e
+#    say "caught deliberate segmentation fault", e.code, 'err-obj = ', e
 
 
 # 5-arg call
@@ -82,7 +88,7 @@ fd = fs.open-sync(process.argv[1], 'r')
 try
     buffer = mmap.map("foo", PROT_READ, MAP_SHARED, fd, 0)
 catch e
-    say "Pass non int param - caught deliberate exception ", e.code, errno.errno[e.code], 'err-obj = ', e
+    say "Pass faulty arg - caught deliberate exception ", e.code, 'err-obj = ', e
     assert.equal(e.code, constants.EINVAL)
 
 # zero size should throw exception
@@ -90,7 +96,7 @@ fd = fs.open-sync(process.argv[1], 'r')
 try
     buffer = mmap.map(0, PROT_READ, MAP_SHARED, fd, 0)
 catch e
-    say "Pass zero size - caught deliberate exception ", e.code, errno.errno[e.code], 'err-obj = ', e
+    say "Pass zero size - caught deliberate exception ", e.code, 'err-obj = ', e
     assert.equal(e.code, constants.EINVAL)
 
 # non-page size offset should throw exception
@@ -99,7 +105,7 @@ fd = fs.open-sync(process.argv[1], 'r')
 try
     buffer = mmap.map(size, PROT_READ, MAP_SHARED, fd, WRONG_PAGE_SIZE)
 catch e
-    say "Pass wrong page-size as offset - caught deliberate exception ", e.code, errno.errno[e.code], 'err-obj = ', e
+    say "Pass wrong page-size as offset - caught deliberate exception ", e.code, 'err-obj = ', e
     assert.equal(e.code, constants.EINVAL)
 
 
@@ -109,7 +115,7 @@ try
     buffer = mmap.map(size, PROT_READ, MAP_SHARED, fd)
     mmap.advise buffer, "fuck off"
 catch e
-    say "Pass faulty arg to advise() - caught deliberate exception ", e.code, errno.errno[e.code], 'err-obj = ', e
+    say "Pass faulty arg to advise() - caught deliberate exception ", e.code, 'err-obj = ', e
     assert.equal(e.code, constants.EINVAL)
 
 
@@ -150,7 +156,7 @@ try
     say "Write/read verification seemed to work out"
 
 catch e
-    say "Something fucked up in the write/read test: ", e.code, errno.errno[e.code], 'err-obj = ', e
+    say "Something fucked up in the write/read test: ", e.code, 'err-obj = ', e
 
 try
     say "sync() tests x 4"
@@ -168,9 +174,15 @@ try
     mmap.sync w-buffer
 
 catch e
-    say "Something fucked up for syncs: ", e.code, errno.errno[e.code], 'err-obj = ', e
+    say "Something fucked up for syncs: ", e.code, 'err-obj = ', e
 
 try
     fs.unlink-sync test-file
+
 catch e
     say "Failed to remove test-file", test-file
+
+say "\nAll done"
+
+
+process.exit 0
