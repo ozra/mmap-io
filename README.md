@@ -95,6 +95,12 @@ mmap.sync w-buffer, 0, size, true, false
 - `Offset`, and in some cases `length` needs to be a multiple of mmap-io.PAGESIZE (which commonly is 4096)
 
 
+# Tests
+```
+node ./test.js
+```
+
+
 # Todo, Not Todo and Stuff
 - More tests
 - Huge pages are only supported for anonymous / private mappings (well, in Linux), so I didn't throw in flags for that since I found no use.
