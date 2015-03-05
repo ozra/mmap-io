@@ -1,3 +1,13 @@
+# Compiled target .js files (build from LS)
+mmap-io.js
+test.js
+mmap-io.s
+tmp-mmap-file
+
+build/
+node_modules/
+
+
 # Compiled Object files
 *.slo
 *.lo
