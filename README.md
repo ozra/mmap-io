@@ -16,7 +16,7 @@ It should be noted that mem-mapping is by nature potentially blocking, and _shou
 
 # Log
 
-### 2015-03-04: version 0.1.2
+### 2015-03-04: version 0.1.3
 This is the first public commit, and the code has one day of development put into it as of now. More tests are needed so don't count on it being production ready just yet (but soon).
 
 
@@ -93,6 +93,12 @@ mmap.sync w-buffer, 0, size, true, false
 - Write-mappings need the fd to be opened with "r+", or you'll get a permission error (13).
 - If you make a read-only mapping and then ignorantly set a value in the buffer, all hell previously unknown to a JS'er breaks loose (segmentation fault). It is possible to write some devilous code to intercept the SIGSEGV and throw an exception, but let's not do that!
 - `Offset`, and in some cases `length` needs to be a multiple of mmap-io.PAGESIZE (which commonly is 4096)
+
+
+# Tests
+```
+node ./test.js
+```
 
 
 # Todo, Not Todo and Stuff
