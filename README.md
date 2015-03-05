@@ -1,9 +1,11 @@
-# mmap for io.js / Node.js
-mmap/madvise/msync for io.js / node.js revisited.
+[![Build Status](https://travis-ci.org/ozra/mmap-io.svg?branch=master)](https://travis-ci.org/ozra/mmap-io)
 
-I needed shared memory mapping and came across @bnoordhuis module [node-mmap](https://github.com/bnoordhuis/node-mmap), only to find that it didn't work with later versions of io.js (and compatibles), so out of need I threw this together along with the functionality I found was missing in the node-mmap: advice and sync.
+# Mmap for Io.js / Node.js
+mmap(2) / madvise(2) / msync(2) for io.js / node.js revisited.
 
-Strong temptations to re-order arguments to something more sane, was kept at bay, and I kept it as mmap(2) and node-mmap for compatibility. Notable difference is the additional optional argument to pass a usage advise in the mapping stage. I've given advise and sync more practical arguments, out of an io.js perspective, than their C/C++ counterparts.
+I needed shared memory mapping and came across @bnoordhuis module [node-mmap](https://github.com/bnoordhuis/node-mmap), only to find that it didn't work with later versions of io.js (and compatibles). So out of need I threw this together along with the functionality I found was missing in the node-mmap: advice and sync.
+
+Strong temptations to re-order arguments to something more sane was kept at bay, and I kept it as mmap(2) and node-mmap for compatibility. Notable difference is the additional optional argument to pass a usage advise in the mapping stage. I've given advise and sync more practical arguments, out of an io.js perspective, than their C/C++ counterparts.
 
 The flag constants have the same crooked names as in C/C++ to make it straight forward for the user to google the net and relate to man-pages.
 
