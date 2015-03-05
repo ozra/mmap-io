@@ -1,6 +1,6 @@
 {
     "name":         "mmap-io",
-    "version":      "0.1.4",
+    "version":      "0.1.5",
     "license":      "MIT",
     "author": {
         "name":     "Oscar Campbell",
@@ -20,7 +20,7 @@
 
     "scripts": {
         "prepublish":   "./compile-ls.sh",
-        "install":      "node-gyp configure && node-gyp rebuild",
+        "install":      "g++ --version; node-gyp configure && node-gyp rebuild",
         "test":         "node ./test.js"
     },
 
@@ -35,8 +35,7 @@
     },
 
     "main":     "mmap-io",
-    "engines":      {
-        "iojs": ">=1.0.0",
+    "engines": {
         "node": ">=0.10.0"
     }
 }
