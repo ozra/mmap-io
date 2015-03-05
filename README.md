@@ -16,8 +16,8 @@ It should be noted that mem-mapping is by nature potentially blocking, and _shou
 
 # Log
 
-### 2015-03-04: version 0.1.0
-This is the first commit, and the code has one day of development put into it as of now. More tests are needed so don't count on it being production ready just yet (but soon).
+### 2015-03-04: version 0.1.2
+This is the first public commit, and the code has one day of development put into it as of now. More tests are needed so don't count on it being production ready just yet (but soon).
 
 
 # Install
