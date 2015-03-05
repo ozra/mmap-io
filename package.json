@@ -1,0 +1,42 @@
+{
+    "name":         "mmap-io",
+    "version":      "0.1.2",
+    "license":      "MIT",
+    "author": {
+        "name":     "Oscar Campbell",
+        "email":    "oscar@campbell.nu",
+        "url":      "https://github.com/ozra"
+    },
+    "description":  "io.js/node.js mmap bindings revisited.",
+    "homepage":     "https://github.com/ozra/mmap-io",
+    "keywords":     ["low level", "file", "mmap", "advise", "sync", "shared memory", "C++", "performance"],
+    "repository": {
+        "type":         "git",
+        "url":          "https://github.com/ozra/mmap-io.git"
+    },
+    "bugs": {
+        "url" : "http://github.com/ozra/mmap-io/issues"
+    },
+
+    "scripts": {
+        "prepublish":   "./compile-ls.sh",
+        "install":      "node-gyp configure && node-gyp rebuild",
+        "test":         "node ./test.js"
+    },
+
+    "devDependencies": {
+        "LiveScript": "*",
+        "errno": "*"
+    },
+
+    "dependencies": {
+        "bindings": "1.2.1",
+        "nan":      "*"
+    },
+
+    "main":     "mmap-io",
+    "engines":      {
+        "iojs": ">=1.0.0",
+        "node": ">=0.10.0"
+    }
+}
