@@ -32,7 +32,8 @@
 
     "dependencies": {
         "bindings": "1.2.1",
-        "nan":      "1.9.0"
+        "nan":      "1.9.0",
+        "LiveScript": "*"
     },
 
     "main":     "mmap-io",
