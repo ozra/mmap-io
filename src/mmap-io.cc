@@ -9,8 +9,14 @@
 */
 #include <nan.h>
 #include <errno.h>
+
+#ifdef _WIN32
+#include <windows.h>
+#include "mman.h"
+#else
 #include <unistd.h>
 #include <sys/mman.h>
+#endif
 
 using namespace v8;
 
@@ -176,7 +182,13 @@ void Init(Handle<Object> exports, Handle<Object> module) {
             //set_prop("MS_SYNC", MS_SYNC);
             //set_prop("MS_INVALIDATE", MS_INVALIDATE);
 
+#ifdef _WIN32
+            SYSTEM_INFO sysinfo;
+            GetSystemInfo(&sysinfo);
+            set_prop("PAGESIZE", sysinfo.dwPageSize);
+#else
             set_prop("PAGESIZE", sysconf(_SC_PAGESIZE));
+#endif
 
             exports->ForceSet(NanNew("map"), NanNew<FunctionTemplate>(mmap_map)->GetFunction(), property_attrs);
             exports->ForceSet(NanNew("advise"), NanNew<FunctionTemplate>(mmap_advise)->GetFunction(), property_attrs);
