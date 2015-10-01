@@ -110,5 +110,5 @@ node ./test.js
 - If you miss a feature - contribute! Or request it in an issue. I might add it. I intend to maintain this module since it will be part of a great deal of code I'm working on.
 - If documentation isn't clear, make an issue.
 
-# Constributions
+# Contributions
 Please PR to 'devel' branch.
