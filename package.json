@@ -19,14 +19,12 @@
     },
 
     "scripts": {
-        "prepublish":   "./compile-ls.sh",
-        "postinstall":  "./compile-ls.sh",
-        "install":      "g++ --version; node-gyp configure && node-gyp rebuild",
+        "prepublish":   "make compile",
+        "postinstall":  "make compile",
         "test":         "node ./test.js"
     },
 
     "devDependencies": {
-        "LiveScript": "*",
         "errno": "*"
     },
 
