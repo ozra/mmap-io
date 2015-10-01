@@ -111,4 +111,4 @@ node ./test.js
 - If documentation isn't clear, make an issue.
 
 # Contributions
-Please PR to 'devel' branch.
+Please PR to 'develop' branch.

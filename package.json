@@ -1,6 +1,6 @@
 {
     "name":         "mmap-io",
-    "version":      "0.1.6",
+    "version":      "0.8.0",
     "license":      "MIT",
     "author": {
         "name":     "Oscar Campbell",
@@ -19,19 +19,19 @@
     },
 
     "scripts": {
-        "prepublish":   "./compile-ls.sh",
-        "install":      "g++ --version; node-gyp configure && node-gyp rebuild",
+        "prepublish":   "make compile",
+        "postinstall":  "make compile",
         "test":         "node ./test.js"
     },
 
     "devDependencies": {
-        "LiveScript": "*",
         "errno": "*"
     },
 
     "dependencies": {
         "bindings": "1.2.1",
-        "nan":      "*"
+        "nan":      "1.9.0",
+        "LiveScript": "*"
     },
 
     "main":     "mmap-io",
