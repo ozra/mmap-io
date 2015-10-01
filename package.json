@@ -19,8 +19,8 @@
     },
 
     "scripts": {
-        "prepublish":   "make compile",
-        "postinstall":  "make compile",
+        "prepublish":   "make ls",
+        "install":      "node-gyp configure && node-gyp rebuild",
         "test":         "node ./test.js"
     },
 

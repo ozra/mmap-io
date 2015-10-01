@@ -2,7 +2,7 @@
     Licensed under The MIT License (MIT)
     You will find the full license legal mumbo jumbo in file "LICENSE"
 
-    Copyright (c) 2014 - 2015 Oscar Campbell
+    Copyright (c) 2015 Oscar Campbell
 
     Inspired by Ben Noordhuis module node-mmap - which does the same thing for older node
     versions, sans advise and sync.
@@ -17,6 +17,8 @@
 #include <unistd.h>
 #include <sys/mman.h>
 #endif
+
+#include <future>
 
 using namespace v8;
 
@@ -79,10 +81,17 @@ JS_FN(mmap_map) {
             }
             else {
                 if (advise != 0) {
-                    auto ret = do_mmap_advice(data, size, advise);
-                    if (ret) {
-                        return NanThrowError("madvise() failed", errno);
-                    }
+
+                    // TEST TEMP *TODO*
+                    std::async(std::launch::async, [=](){
+                        auto ret = do_mmap_advice(data, size, advise);
+                        if (ret) {
+                            return NanThrowError("madvise() failed", errno);
+                        }
+
+                        readahead(fd, offset, 1024 * 1024 * 4);
+                    });
+
                 }
 
                 auto map_info = new MMap(data, size);
@@ -121,6 +130,7 @@ JS_FN(mmap_advise) {
             if (ret) {
                 return NanThrowError("madvise() failed", errno);
             }
+
             NanReturnUndefined();
 }
 
