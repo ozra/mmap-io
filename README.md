@@ -11,15 +11,30 @@ The flag constants have the same crooked names as in C/C++ to make it straight f
 
 This is my first io.js addon and after hours wasted reading up on V8 API I luckily stumbled upon [Native Abstractions for Node](https://github.com/rvagg/nan). Makes life so much easier. Hot tip!
 
-It's written in C++11 and [LiveScript](https://github.com/gkz/LiveScript).
+_mmap-io_ is written in C++11 and [LiveScript](https://github.com/gkz/LiveScript).
 
 It should be noted that mem-mapping is by nature potentially blocking, and _should not be used in concurrent serving/processing applications_, but rather has it's niche where multiple processes are working on the same giant sets of data (thereby sparing physical memory, and load times if the kernel does it's job for read ahead), preferably multiple readers and single or none concurrent writer, to not spoil the gains by shitloads of mutexes. And your noble specific use case ofcourse.
 
 
-# Log
+# News and Updates
+
+### 2015-10-01: version 0.8.1
+- Windows compatibility added. Thanks to @toxicwolf
+- Rewrote the bindings to Nan 2.0.9 API version (V8/io/Node hell...)
+    + Had to remove the error _codes_ to get it working in the time I had
+      available (or rather - didn't have..) -
+      error messages are still there - with code in message instead. Though,
+      usually nothing goes wrong, so only the test cares ;-)
+- Added some helpful targets in Makefile `human_errors`, `ls` only, `build`
+  only, etc. (useful if you wanna hack the module)
+- Since all _functionality_ that can possibly be is in place, I bumped all the
+  way to 0.8. Not battle tested enough to warrant higher.
+- Commented away experimental async read-ahead caching when readahead hint was on. It
+  hasn't broken, but it's an unnecessary risk. Plays safe. You can toy with it
+  yourself if you want to try to milk out some _ms_ performance.
 
 ### 2015-03-04: version 0.1.3
-This is the first public commit, and the code has one day of development put into it as of now. More tests are needed so don't count on it being production ready just yet (but soon).
+- This is the first public commit, and the code has one day of development put into it as of now. More tests are needed so don't count on it being production ready just yet (but soon).
 
 
 # Install

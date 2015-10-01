@@ -1,6 +1,6 @@
 {
     "name":         "mmap-io",
-    "version":      "0.8.0",
+    "version":      "0.8.1",
     "license":      "MIT",
     "author": {
         "name":     "Oscar Campbell",
@@ -9,7 +9,7 @@
     },
     "description":  "io.js/node.js mmap bindings revisited.",
     "homepage":     "https://github.com/ozra/mmap-io",
-    "keywords":     ["low level", "file", "mmap", "advise", "sync", "shared memory", "C++", "performance"],
+    "keywords":     ["low level", "file", "memory mapped", "mmap", "advise", "sync", "shared memory", "C++", "performance"],
     "repository": {
         "type":         "git",
         "url":          "https://github.com/ozra/mmap-io.git"
@@ -25,13 +25,13 @@
     },
 
     "devDependencies": {
-        "errno": "*"
+        "errno": "*",
+        "LiveScript": "1.*.*"
     },
 
     "dependencies": {
-        "bindings": "1.2.1",
-        "nan":      "1.9.0",
-        "LiveScript": "*"
+        "bindings": "1.*.*",
+        "nan":      "2.*.*"
     },
 
     "main":     "mmap-io",
