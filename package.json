@@ -1,6 +1,6 @@
 {
     "name":         "mmap-io",
-    "version":      "0.8.1",
+    "version":      "0.9.3",
     "license":      "MIT",
     "author": {
         "name":     "Oscar Campbell",

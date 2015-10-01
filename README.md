@@ -18,7 +18,7 @@ It should be noted that mem-mapping is by nature potentially blocking, and _shou
 
 # News and Updates
 
-### 2015-10-01: version 0.8.1
+### 2015-10-01: version 0.9.3
 - Windows compatibility added. Thanks to @toxicwolf
 - Rewrote the bindings to Nan 2.0.9 API version (V8/io/Node hell...)
     + Had to remove the error _codes_ to get it working in the time I had
