@@ -18,6 +18,9 @@ It should be noted that mem-mapping is by nature potentially blocking, and _shou
 
 # News and Updates
 
+### 2015-10-10: version 0.9.4
+- Compilation on Mac should work now. Thanks to @aeickhoff
+
 ### 2015-10-01: version 0.9.3
 - Windows compatibility added. Thanks to @toxicwolf
 - Rewrote the bindings to Nan 2.0.9 API version (V8/io/Node hell...)
