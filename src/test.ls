@@ -46,6 +46,10 @@ try
     for ix from (size - 1) to 0 by -1
         out += String.from-char-code(buffer[ix])
 
+    incore_stats = mmap.incore(buffer)
+    assert.equal(incore_stats[0], 0)
+    assert.equal(incore_stats[1], 2)
+
     #say out, "\n\n"
 catch e
     assert false, "Shit happened while reading from buffer"

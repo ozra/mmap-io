@@ -146,6 +146,62 @@ JS_FN(mmap_advise) {
             //Nan::ReturnUndefined();
 }
 
+JS_FN(mmap_incore) {
+            Nan::HandleScope();
+
+            if (info.Length() != 1) {
+                return Nan::ThrowError(
+                    "incore() takes 1 argument: (buffer :Buffer) ."
+                );
+            }
+            if (!info[0]->IsObject())    return Nan::ThrowError("advice(): buffer (arg[0]) must be a Buffer");
+
+            Local<Object>   buf     = info[0]->ToObject();
+            char*           data    = node::Buffer::Data(buf);
+            size_t          size    = node::Buffer::Length(buf);
+
+#ifdef _WIN32
+            SYSTEM_INFO sysinfo;
+            GetSystemInfo(&sysinfo);
+            size_t          page_size = sysinfo.dwPageSize;
+#else
+            size_t          page_size = sysconf(_SC_PAGESIZE);
+#endif
+
+
+            size_t          needed_bytes = (size+page_size-1) / page_size;
+            size_t          pages = size / page_size;
+            unsigned char*  resultData = (unsigned char *)malloc(needed_bytes);
+
+            if (size % page_size > 0) {
+              pages++;
+            }
+
+            int ret = mincore(data, size, resultData);
+
+            if (ret) {
+                free(resultData);
+                return Nan::ThrowError((std::string("mincore() failed, ") + std::to_string(errno)).c_str());
+            }
+
+            // Now we want to check all of the pages
+            uint32_t pages_mapped = 0;
+            uint32_t pages_unmapped = 0;
+            for(size_t i = 0; i < pages; i++) {
+              if(!(resultData[i] & 0x1)) {
+                pages_unmapped++;
+              } else {
+                pages_mapped++;
+              }
+            }
+            free(resultData);
+
+            v8::Local<v8::Array> arr = Nan::New<v8::Array>(2);
+            Nan::Set(arr, 0, Nan::New(pages_unmapped));
+            Nan::Set(arr, 1, Nan::New(pages_mapped));
+            info.GetReturnValue().Set(arr);
+}
+
 NAN_METHOD(mmap_sync_lib_private_) {
             Nan::HandleScope();
 
@@ -192,6 +248,13 @@ void Init(Handle<Object> exports, Handle<Object> module) {
 
             set_prop("MAP_SHARED", MAP_SHARED);
             set_prop("MAP_PRIVATE", MAP_PRIVATE);
+#ifdef MAP_NONBLOCK
+            set_prop("MAP_NONBLOCK", MAP_NONBLOCK);
+#endif
+
+#ifdef MAP_POPULATE
+            set_prop("MAP_POPULATE", MAP_POPULATE);
+#endif
 
             set_prop("MADV_NORMAL", MADV_NORMAL);
             set_prop("MADV_RANDOM", MADV_RANDOM);
@@ -213,6 +276,7 @@ void Init(Handle<Object> exports, Handle<Object> module) {
 
             exports->ForceSet(Nan::New("map").ToLocalChecked(), Nan::New<FunctionTemplate>(mmap_map)->GetFunction(), property_attrs);
             exports->ForceSet(Nan::New("advise").ToLocalChecked(), Nan::New<FunctionTemplate>(mmap_advise)->GetFunction(), property_attrs);
+            exports->ForceSet(Nan::New("incore").ToLocalChecked(), Nan::New<FunctionTemplate>(mmap_incore)->GetFunction(), property_attrs);
 
             // This one is wrapped by a JS-function and deleted from obj to hide from user
             // *TODO* perhaps call is sync so that we simply can drop in to the sync-name in JS, no deleting
