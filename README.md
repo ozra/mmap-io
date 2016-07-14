@@ -1,7 +1,7 @@
 [![Build Status](https://travis-ci.org/ozra/mmap-io.svg?branch=master)](https://travis-ci.org/ozra/mmap-io)
 
 # Mmap for Io.js / Node.js
-mmap(2) / madvise(2) / msync(2) for io.js / node.js revisited.
+mmap(2) / madvise(2) / msync(2) / mincore(2) for io.js / node.js revisited.
 
 I needed shared memory mapping and came across @bnoordhuis module [node-mmap](https://github.com/bnoordhuis/node-mmap), only to find that it didn't work with later versions of io.js (and compatibles). So out of need I threw this together along with the functionality I found was missing in the node-mmap: advice and sync.
 
@@ -102,13 +102,18 @@ mmap.sync w-buffer, 0, size
 mmap.sync w-buffer, 0, size, true
 mmap.sync w-buffer, 0, size, true, false
 
+# incore( buffer ) -> [ pages_unmapped, pages_mapped ]
+
+core_stats = mmap.incore(buffer)
+pages_mapped = core_stats[1]
+
 # Yeah, you will do _one_ of the variants ofcourse..
 
 ```
 
 ### Good to Know (TM)
 
-- Checkout man pages mmap(2), madvise(2) and msync(2) for more detailed intell.
+- Checkout man pages mmap(2), madvise(2), msync(2), mincore(2) for more detailed intell.
 - The mappings is automatically unmapped when the buffer is garbage collected.
 - Write-mappings need the fd to be opened with "r+", or you'll get a permission error (13).
 - If you make a read-only mapping and then ignorantly set a value in the buffer, all hell previously unknown to a JS'er breaks loose (segmentation fault). It is possible to write some devilous code to intercept the SIGSEGV and throw an exception, but let's not do that!
