@@ -171,7 +171,12 @@ JS_FN(mmap_incore) {
 
             size_t          needed_bytes = (size+page_size-1) / page_size;
             size_t          pages = size / page_size;
+
+#ifdef __APPLE__
+            char*  resultData = (char *)malloc(needed_bytes);
+#else
             unsigned char*  resultData = (unsigned char *)malloc(needed_bytes);
+#endif
 
             if (size % page_size > 0) {
               pages++;
