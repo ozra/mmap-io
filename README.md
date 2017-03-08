@@ -18,6 +18,9 @@ It should be noted that mem-mapping is by nature potentially blocking, and _shou
 
 # News and Updates
 
+### 2017-03-08: version 0.11.1
+- compilation fixes 10.8 OSX fix. Thanks to @arrayjam
+
 ### 2016-07-21: version 0.10.1
 - incore fix for Mac OS. Thanks @rustyconover
 
