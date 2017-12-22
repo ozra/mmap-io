@@ -3,6 +3,7 @@
 # Some lines snatched from Ben Noordhuis test-script of "node-mmap"
 
 fs =        require "fs"
+os =        require "os"
 #mmap =      require "./build/Release/mmap-io.node"
 mmap =      require "./mmap-io"
 assert =    require "assert"
@@ -46,13 +47,15 @@ try
     for ix from (size - 1) to 0 by -1
         out += String.from-char-code(buffer[ix])
 
+    # not implemented on Win32
     incore_stats = mmap.incore(buffer)
     assert.equal(incore_stats[0], 0)
     assert.equal(incore_stats[1], 2)
 
     #say out, "\n\n"
 catch e
-    assert false, "Shit happened while reading from buffer"
+    if e.message != 'mincore() not implemented'
+        assert false, "Shit happened while reading from buffer"
 
 try
     say "read out of bounds test"
@@ -82,10 +85,14 @@ assert.equal(buffer.length, size)
 
 # Snatched from Ben Noordhuis test-script:
 # page size is almost certainly >= 4K and this script isn't that large...
-fd = fs.open-sync(process.argv[1], 'r')
-buffer = mmap.map(size, PROT_READ, MAP_SHARED, fd, PAGESIZE)
-say "buflen test 3 = ", buffer.length
-assert.equal(buffer.length, size);    # ...but this is according to spec
+if os.type() != 'Windows_NT'
+    # XXX: this will always fail on Windows, as it requires that offset be a
+    # multiple of the dwAllocationGranularity, which is NOT the same as the
+    # pagesize.  In addition, the offset+length can't exceed the file size.
+    fd = fs.open-sync(process.argv[1], 'r')
+    buffer = mmap.map(size, PROT_READ, MAP_SHARED, fd, PAGESIZE)
+    say "buflen test 3 = ", buffer.length
+    assert.equal(buffer.length, size);    # ...but this is according to spec
 
 # non int param should throw exception
 fd = fs.open-sync(process.argv[1], 'r')
