@@ -1,4 +1,4 @@
-LSC = ./node_modules/LiveScript/bin/lsc
+LSC = ./node_modules/livescript/bin/lsc
 LS_SRC_FILES = src/test.ls src/mmap-io.ls
 
 all: update_modules build
@@ -19,9 +19,9 @@ ls: $(LS_SRC_FILES:src/%.ls=%.js)
 %.js: src/%.ls
 ifeq ($(shell test -e ../../$(LSC) && echo -n yes),yes) #uses info from https://stackoverflow.com/questions/5553352/how-do-i-check-if-file-exists-in-makefile
 	echo "using parent's LiveScript"
-	../../$(LSC) -b -c $< -o ./
+	../../$(LSC) -b -c -o ./ $<
 else
-	$(LSC) -b -c $< -o ./
+	$(LSC) -b -c -o ./ $<
 endif
 
 clean:

@@ -2,7 +2,7 @@
     Licensed under The MIT License (MIT)
     You will find the full license legal mumbo jumbo in file "LICENSE"
 
-    Copyright (c) 2015 Oscar Campbell
+    Copyright (c) 2015 - 2018 Oscar Campbell
 
     Inspired by Ben Noordhuis module node-mmap - which does the same thing for older node
     versions, sans advise and sync.
@@ -19,20 +19,17 @@
 #include <sys/mman.h>
 #endif
 
-#include <future>
+/* #include <future> */
 
 using namespace v8;
 
-// Just a bit more clear and terser
+// Just a bit more clear as to intent
 #define JS_FN(a) NAN_METHOD(a)
-
-// Just for the hell of it ;-) - Oscar Campbell
-#define IOJS_MODULE(a,b) NODE_MODULE(a, b)
 
 // This lib is one of those pieces of code where clarity is better then puny micro opts (in
 // comparison to the massive blocking that will occur when the data is first read from disk)
 // Since casting `size` to `void*` feels a little "out there" considering that void* may be
-// 32b or 64b (or, I dunno, 47b on some quant particle system), we throw this struct in..
+// 32b or 64b (or, I dunno, 47b on some quant particle system), we throw this struct in.
 struct MMap {
     MMap(char* data, size_t size) : data(data), size(size) {}
     char*   data = nullptr;
@@ -107,7 +104,6 @@ JS_FN(mmap_map) {
                 if (buf.IsEmpty()) {
                     return Nan::ThrowError(std::string("couldn't allocate Node Buffer()").c_str());
                 } else {
-                    //Nan::ReturnValue(buf);
                     info.GetReturnValue().Set(buf.ToLocalChecked());
                 }
             }
@@ -154,6 +150,7 @@ JS_FN(mmap_incore) {
                     "incore() takes 1 argument: (buffer :Buffer) ."
                 );
             }
+
             if (!info[0]->IsObject())    return Nan::ThrowError("advice(): buffer (arg[0]) must be a Buffer");
 
             Local<Object>   buf     = info[0]->ToObject();
@@ -168,7 +165,6 @@ JS_FN(mmap_incore) {
             size_t          page_size = sysconf(_SC_PAGESIZE);
 #endif
 
-
             size_t          needed_bytes = (size+page_size-1) / page_size;
             size_t          pages = size / page_size;
 
@@ -179,29 +175,32 @@ JS_FN(mmap_incore) {
 #endif
 
             if (size % page_size > 0) {
-              pages++;
+                pages++;
             }
 
             int ret = mincore(data, size, resultData);
+
             if (ret) {
                 free(resultData);
                 if (errno == ENOSYS) {
-                  return Nan::ThrowError("mincore() not implemented");
+                    return Nan::ThrowError("mincore() not implemented");
                 } else {
-                  return Nan::ThrowError((std::string("mincore() failed, ") + std::to_string(errno)).c_str());
+                    return Nan::ThrowError((std::string("mincore() failed, ") + std::to_string(errno)).c_str());
                 }
             }
 
             // Now we want to check all of the pages
             uint32_t pages_mapped = 0;
             uint32_t pages_unmapped = 0;
+
             for(size_t i = 0; i < pages; i++) {
-              if(!(resultData[i] & 0x1)) {
-                pages_unmapped++;
-              } else {
-                pages_mapped++;
-              }
+                if(!(resultData[i] & 0x1)) {
+                    pages_unmapped++;
+                } else {
+                    pages_mapped++;
+                }
             }
+
             free(resultData);
 
             v8::Local<v8::Array> arr = Nan::New<v8::Array>(2);
@@ -210,7 +209,7 @@ JS_FN(mmap_incore) {
             info.GetReturnValue().Set(arr);
 }
 
-NAN_METHOD(mmap_sync_lib_private_) {
+JS_FN(mmap_sync_lib_private_) {
             Nan::HandleScope();
 
             // I barfed at the thought of implementing all variants of info-combos in C++, so
@@ -220,18 +219,17 @@ NAN_METHOD(mmap_sync_lib_private_) {
                     "sync() takes 5 arguments: (buffer :Buffer, offset :int, length :int, do_blocking_sync :bool, invalidate_pages_and_signal_refresh_to_consumers :bool)."
                 );
             }
+
             if (!info[0]->IsObject())    return Nan::ThrowError("sync(): buffer (arg[0]) must be a Buffer");
-            //if (!info[1]->IsNumber())    return Nan::ThrowError("advice(): (arg[1]) must be an integer");
 
-            Local<Object>   buf     = info[0]->ToObject();
-            char*           data    = node::Buffer::Data(buf);
-            //size_t          size    = node::Buffer::Length(buf);
+            Local<Object>   buf             = info[0]->ToObject();
+            char*           data            = node::Buffer::Data(buf);
 
-            int     offset          = info[1]->ToInteger()->Value();
-            size_t  length          = info[2]->ToInteger()->Value();
-            bool    blocking_sync   = info[3]->ToBoolean()->Value();
-            bool    invalidate      = info[4]->ToBoolean()->Value();
-            int     flags           = ( (blocking_sync ? MS_SYNC : MS_ASYNC) | (invalidate ? MS_INVALIDATE : 0) );
+            int             offset          = info[1]->ToInteger()->Value();
+            size_t          length          = info[2]->ToInteger()->Value();
+            bool            blocking_sync   = info[3]->ToBoolean()->Value();
+            bool            invalidate      = info[4]->ToBoolean()->Value();
+            int             flags           = ( (blocking_sync ? MS_SYNC : MS_ASYNC) | (invalidate ? MS_INVALIDATE : 0) );
 
             int ret = msync(data + offset, length, flags);
 
@@ -244,57 +242,58 @@ NAN_METHOD(mmap_sync_lib_private_) {
 
 void Init(Handle<Object> exports, Handle<Object> module) {
             constexpr auto property_attrs = static_cast<PropertyAttribute>(ReadOnly | DontDelete);
+            using JsFnType = decltype(mmap_map);
 
-            auto set_prop = [&](const char* key, int val) -> void {
-//                   exports->ForceSet(Nan::New(key).ToLocalChecked(), Nan::New(val), property_attrs);
-                   Nan::ForceSet(exports, Nan::New(key).ToLocalChecked(), Nan::New(val), property_attrs);
+            auto set_int_prop = [&](const char* key, int val) -> void {
+                Nan::DefineOwnProperty(exports, Nan::New(key).ToLocalChecked(), Nan::New(val), property_attrs);
             };
 
-            set_prop("PROT_READ", PROT_READ);
-            set_prop("PROT_WRITE", PROT_WRITE);
-            set_prop("PROT_EXEC", PROT_EXEC);
-            set_prop("PROT_NONE", PROT_NONE);
+            auto set_fn_prop = [&](const char* key, JsFnType fn) -> void {
+                Nan::DefineOwnProperty(exports, Nan::New(key).ToLocalChecked(), Nan::New<FunctionTemplate>(fn)->GetFunction(), property_attrs);
+            };
 
-            set_prop("MAP_SHARED", MAP_SHARED);
-            set_prop("MAP_PRIVATE", MAP_PRIVATE);
+            set_int_prop("PROT_READ", PROT_READ);
+            set_int_prop("PROT_WRITE", PROT_WRITE);
+            set_int_prop("PROT_EXEC", PROT_EXEC);
+            set_int_prop("PROT_NONE", PROT_NONE);
+
+            set_int_prop("MAP_SHARED", MAP_SHARED);
+            set_int_prop("MAP_PRIVATE", MAP_PRIVATE);
+
 #ifdef MAP_NONBLOCK
-            set_prop("MAP_NONBLOCK", MAP_NONBLOCK);
+            set_int_prop("MAP_NONBLOCK", MAP_NONBLOCK);
 #endif
 
 #ifdef MAP_POPULATE
-            set_prop("MAP_POPULATE", MAP_POPULATE);
+            set_int_prop("MAP_POPULATE", MAP_POPULATE);
 #endif
 
-            set_prop("MADV_NORMAL", MADV_NORMAL);
-            set_prop("MADV_RANDOM", MADV_RANDOM);
-            set_prop("MADV_SEQUENTIAL", MADV_SEQUENTIAL);
-            set_prop("MADV_WILLNEED", MADV_WILLNEED);
-            set_prop("MADV_DONTNEED", MADV_DONTNEED);
+            set_int_prop("MADV_NORMAL", MADV_NORMAL);
+            set_int_prop("MADV_RANDOM", MADV_RANDOM);
+            set_int_prop("MADV_SEQUENTIAL", MADV_SEQUENTIAL);
+            set_int_prop("MADV_WILLNEED", MADV_WILLNEED);
+            set_int_prop("MADV_DONTNEED", MADV_DONTNEED);
 
-            //set_prop("MS_ASYNC", MS_ASYNC);
-            //set_prop("MS_SYNC", MS_SYNC);
-            //set_prop("MS_INVALIDATE", MS_INVALIDATE);
+            //set_int_prop("MS_ASYNC", MS_ASYNC);
+            //set_int_prop("MS_SYNC", MS_SYNC);
+            //set_int_prop("MS_INVALIDATE", MS_INVALIDATE);
 
 #ifdef _WIN32
             SYSTEM_INFO sysinfo;
             GetSystemInfo(&sysinfo);
-            set_prop("PAGESIZE", sysinfo.dwPageSize);
+            set_int_prop("PAGESIZE", sysinfo.dwPageSize);
 #else
-            set_prop("PAGESIZE", sysconf(_SC_PAGESIZE));
+            set_int_prop("PAGESIZE", sysconf(_SC_PAGESIZE));
 #endif
 
-//            exports->ForceSet(Nan::New("map").ToLocalChecked(), Nan::New<FunctionTemplate>(mmap_map)->GetFunction(), property_attrs);
-//            exports->ForceSet(Nan::New("advise").ToLocalChecked(), Nan::New<FunctionTemplate>(mmap_advise)->GetFunction(), property_attrs);
-//            exports->ForceSet(Nan::New("incore").ToLocalChecked(), Nan::New<FunctionTemplate>(mmap_incore)->GetFunction(), property_attrs);
-            Nan::ForceSet(exports, Nan::New("map").ToLocalChecked(), Nan::New<FunctionTemplate>(mmap_map)->GetFunction(), property_attrs);
-            Nan::ForceSet(exports, Nan::New("advise").ToLocalChecked(), Nan::New<FunctionTemplate>(mmap_advise)->GetFunction(), property_attrs);
-            Nan::ForceSet(exports, Nan::New("incore").ToLocalChecked(), Nan::New<FunctionTemplate>(mmap_incore)->GetFunction(), property_attrs);
 
+            set_fn_prop("map", mmap_map);
+            set_fn_prop("advise", mmap_advise);
+            set_fn_prop("incore", mmap_incore);
             // This one is wrapped by a JS-function and deleted from obj to hide from user
             // *TODO* perhaps call is sync so that we simply can drop in to the sync-name in JS, no deleting
-//            exports->ForceSet(Nan::New("sync_lib_private__").ToLocalChecked(), Nan::New<FunctionTemplate>(mmap_sync_lib_private_)->GetFunction(), PropertyAttribute::None);
-            Nan::ForceSet(exports, Nan::New("sync_lib_private__").ToLocalChecked(), Nan::New<FunctionTemplate>(mmap_sync_lib_private_)->GetFunction(), PropertyAttribute::None);
+            set_fn_prop("sync_lib_private__", mmap_sync_lib_private_);
 
 }
 
-IOJS_MODULE(mmap_io, Init)
+NODE_MODULE(mmap_io, Init)

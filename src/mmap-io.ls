@@ -1,9 +1,11 @@
 mmap-io = require "./build/Release/mmap-io.node"
 
 private-sync = mmap-io.sync_lib_private__
+
+# Hide the original C++11 func for users
 delete mmap-io.sync_lib_private__
 
-# Take care of all the param juggling here instead of in C++-code, yikes.. /ORC
+# Take care of all the param juggling here instead of in C++ code, yikes.. /ORC
 mmap-io.sync = (buf, offset, size, blocking-sync, invalidate-pages) !->
     switch typeof offset
     | "boolean"
