@@ -17,25 +17,21 @@
     "bugs": {
         "url" : "http://github.com/ozra/mmap-io/issues"
     },
-
     "scripts": {
-        "prepublish":   "make ls",
+        "prepare":      "lsc -b -c -o ./ src/mmap-io.ls src/test.ls",
         "install":      "node-gyp configure && node-gyp rebuild",
     "postinstall": "make ls",
     "test":         "node ./test.js"
     },
-
     "devDependencies": {
         "errno": "*",
         "LiveScript": "1.*.*"
     },
-
     "dependencies": {
         "bindings": "1.*.*",
         "LiveScript": "1.*.*",
         "nan":      "2.*.*"
     },
-
     "main":     "mmap-io",
     "engines": {
         "node": ">=0.10.0"

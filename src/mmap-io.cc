@@ -183,10 +183,13 @@ JS_FN(mmap_incore) {
             }
 
             int ret = mincore(data, size, resultData);
-
             if (ret) {
                 free(resultData);
-                return Nan::ThrowError((std::string("mincore() failed, ") + std::to_string(errno)).c_str());
+                if (errno == ENOSYS) {
+                  return Nan::ThrowError("mincore() not implemented");
+                } else {
+                  return Nan::ThrowError((std::string("mincore() failed, ") + std::to_string(errno)).c_str());
+                }
             }
 
             // Now we want to check all of the pages
