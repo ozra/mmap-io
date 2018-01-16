@@ -17,7 +17,12 @@ human_errors:
 ls: $(LS_SRC_FILES:src/%.ls=%.js)
 
 %.js: src/%.ls
+ifeq ($(shell test -e ../../$(LSC) && echo -n yes),yes) #uses info from https://stackoverflow.com/questions/5553352/how-do-i-check-if-file-exists-in-makefile
+	echo "using parent's LiveScript"
+	../../$(LSC) -b -c $< -o ./
+else
 	$(LSC) -b -c $< -o ./
+endif
 
 clean:
 	rm -rf build *.js

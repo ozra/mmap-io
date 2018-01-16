@@ -21,7 +21,8 @@
     "scripts": {
         "prepublish":   "make ls",
         "install":      "node-gyp configure && node-gyp rebuild",
-        "test":         "node ./test.js"
+    "postinstall": "make ls",
+    "test":         "node ./test.js"
     },
 
     "devDependencies": {
@@ -31,6 +32,7 @@
 
     "dependencies": {
         "bindings": "1.*.*",
+        "LiveScript": "1.*.*",
         "nan":      "2.*.*"
     },
 

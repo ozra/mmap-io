@@ -243,7 +243,8 @@ void Init(Handle<Object> exports, Handle<Object> module) {
             constexpr auto property_attrs = static_cast<PropertyAttribute>(ReadOnly | DontDelete);
 
             auto set_prop = [&](const char* key, int val) -> void {
-                   exports->ForceSet(Nan::New(key).ToLocalChecked(), Nan::New(val), property_attrs);
+//                   exports->ForceSet(Nan::New(key).ToLocalChecked(), Nan::New(val), property_attrs);
+                   Nan::ForceSet(exports, Nan::New(key).ToLocalChecked(), Nan::New(val), property_attrs);
             };
 
             set_prop("PROT_READ", PROT_READ);
@@ -279,13 +280,17 @@ void Init(Handle<Object> exports, Handle<Object> module) {
             set_prop("PAGESIZE", sysconf(_SC_PAGESIZE));
 #endif
 
-            exports->ForceSet(Nan::New("map").ToLocalChecked(), Nan::New<FunctionTemplate>(mmap_map)->GetFunction(), property_attrs);
-            exports->ForceSet(Nan::New("advise").ToLocalChecked(), Nan::New<FunctionTemplate>(mmap_advise)->GetFunction(), property_attrs);
-            exports->ForceSet(Nan::New("incore").ToLocalChecked(), Nan::New<FunctionTemplate>(mmap_incore)->GetFunction(), property_attrs);
+//            exports->ForceSet(Nan::New("map").ToLocalChecked(), Nan::New<FunctionTemplate>(mmap_map)->GetFunction(), property_attrs);
+//            exports->ForceSet(Nan::New("advise").ToLocalChecked(), Nan::New<FunctionTemplate>(mmap_advise)->GetFunction(), property_attrs);
+//            exports->ForceSet(Nan::New("incore").ToLocalChecked(), Nan::New<FunctionTemplate>(mmap_incore)->GetFunction(), property_attrs);
+            Nan::ForceSet(exports, Nan::New("map").ToLocalChecked(), Nan::New<FunctionTemplate>(mmap_map)->GetFunction(), property_attrs);
+            Nan::ForceSet(exports, Nan::New("advise").ToLocalChecked(), Nan::New<FunctionTemplate>(mmap_advise)->GetFunction(), property_attrs);
+            Nan::ForceSet(exports, Nan::New("incore").ToLocalChecked(), Nan::New<FunctionTemplate>(mmap_incore)->GetFunction(), property_attrs);
 
             // This one is wrapped by a JS-function and deleted from obj to hide from user
             // *TODO* perhaps call is sync so that we simply can drop in to the sync-name in JS, no deleting
-            exports->ForceSet(Nan::New("sync_lib_private__").ToLocalChecked(), Nan::New<FunctionTemplate>(mmap_sync_lib_private_)->GetFunction(), PropertyAttribute::None);
+//            exports->ForceSet(Nan::New("sync_lib_private__").ToLocalChecked(), Nan::New<FunctionTemplate>(mmap_sync_lib_private_)->GetFunction(), PropertyAttribute::None);
+            Nan::ForceSet(exports, Nan::New("sync_lib_private__").ToLocalChecked(), Nan::New<FunctionTemplate>(mmap_sync_lib_private_)->GetFunction(), PropertyAttribute::None);
 
 }
 
