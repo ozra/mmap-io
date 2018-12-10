@@ -240,7 +240,8 @@ JS_FN(mmap_sync_lib_private_) {
 }
 
 
-void Init(Handle<Object> exports, Handle<Object> module) {
+NAN_MODULE_INIT(Init) {
+            auto exports = target;
             constexpr auto property_attrs = static_cast<PropertyAttribute>(ReadOnly | DontDelete);
             using JsFnType = decltype(mmap_map);
 
