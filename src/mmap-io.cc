@@ -100,7 +100,8 @@ JS_FN(mmap_map) {
                 }
 
                 auto map_info = new MMap(data, size);
-                Nan::MaybeLocal<Object> buf = Nan::NewBuffer(data, size, do_mmap_cleanup, static_cast<void*>(map_info));
+				Nan::MaybeLocal<Object> buf = node::Buffer::New(
+					v8::Isolate::GetCurrent(), data, size, do_mmap_cleanup, static_cast<void*>(map_info));
                 if (buf.IsEmpty()) {
                     return Nan::ThrowError(std::string("couldn't allocate Node Buffer()").c_str());
                 } else {
