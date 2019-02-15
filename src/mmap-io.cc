@@ -68,7 +68,7 @@ JS_FN(mmap_map) {
             const int       protection      = info[1]->IntegerValue();
             const int       flags           = info[2]->ToInteger()->Value();
             const int       fd              = info[3]->ToInteger()->Value();
-            const off_t     offset          = info[4]->ToInteger()->Value();   // ToInt64()->Value();
+            const size_t    offset          = info[4]->ToInteger()->Value();   // ToInt64()->Value();
             const int       advise          = info[5]->ToInteger()->Value();
 
             char* data = static_cast<char*>( mmap( hinted_address, size, protection, flags, fd, offset) );
