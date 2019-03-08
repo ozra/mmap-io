@@ -68,7 +68,7 @@ JS_FN(mmap_map) {
             const int       protection      = info[1]->IntegerValue();
             const int       flags           = info[2]->ToInteger()->Value();
             const int       fd              = info[3]->ToInteger()->Value();
-            const off_t     offset          = info[4]->ToInteger()->Value();   // ToInt64()->Value();
+            const size_t    offset          = info[4]->ToInteger()->Value();   // ToInt64()->Value();
             const int       advise          = info[5]->ToInteger()->Value();
 
             char* data = static_cast<char*>( mmap( hinted_address, size, protection, flags, fd, offset) );
@@ -100,7 +100,8 @@ JS_FN(mmap_map) {
                 }
 
                 auto map_info = new MMap(data, size);
-                Nan::MaybeLocal<Object> buf = Nan::NewBuffer(data, size, do_mmap_cleanup, static_cast<void*>(map_info));
+				Nan::MaybeLocal<Object> buf = node::Buffer::New(
+					v8::Isolate::GetCurrent(), data, size, do_mmap_cleanup, static_cast<void*>(map_info));
                 if (buf.IsEmpty()) {
                     return Nan::ThrowError(std::string("couldn't allocate Node Buffer()").c_str());
                 } else {

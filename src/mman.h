@@ -25,7 +25,7 @@
 #define MADV_WILLNEED   0x03
 #define MADV_DONTNEED   0x04
 
-inline void* mmap(void* addr, size_t length, int prot, int flags, int fd, off_t offset) {
+inline void* mmap(void* addr, size_t length, int prot, int flags, int fd, size_t offset) {
     if (prot & ~(PROT_READ | PROT_WRITE | PROT_EXEC))
         return MAP_FAILED;
     if (fd == -1) {
@@ -48,11 +48,11 @@ inline void* mmap(void* addr, size_t length, int prot, int flags, int fd, off_t 
     } else
         protect = PAGE_READONLY;
 
-    off_t end = length + offset;
-    const DWORD dwEndLow = (sizeof(off_t) > sizeof(DWORD)) ? DWORD(end & 0xFFFFFFFFL) : DWORD(end);
-    const DWORD dwEndHigh = (sizeof(off_t) > sizeof(DWORD)) ? DWORD((end >> 32) & 0xFFFFFFFFL) : DWORD(0);
-    const DWORD dwOffsetLow = (sizeof(off_t) > sizeof(DWORD)) ? DWORD(offset & 0xFFFFFFFFL) : DWORD(offset);
-    const DWORD dwOffsetHigh = (sizeof(off_t) > sizeof(DWORD)) ? DWORD((offset >> 32) & 0xFFFFFFFFL) : DWORD(0);
+    size_t end = length + offset;
+    const DWORD dwEndLow = (sizeof(size_t) > sizeof(DWORD)) ? DWORD(end & 0xFFFFFFFFL) : DWORD(end);
+    const DWORD dwEndHigh = (sizeof(size_t) > sizeof(DWORD)) ? DWORD((end >> 32) & 0xFFFFFFFFL) : DWORD(0);
+    const DWORD dwOffsetLow = (sizeof(size_t) > sizeof(DWORD)) ? DWORD(offset & 0xFFFFFFFFL) : DWORD(offset);
+    const DWORD dwOffsetHigh = (sizeof(size_t) > sizeof(DWORD)) ? DWORD((offset >> 32) & 0xFFFFFFFFL) : DWORD(0);
 
     HANDLE h = (fd != -1) ? HANDLE(uv_get_osfhandle(fd)) : INVALID_HANDLE_VALUE;
     HANDLE fm = CreateFileMapping(h, nullptr, protect, dwEndHigh, dwEndLow, nullptr);
