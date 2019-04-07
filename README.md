@@ -1,22 +1,36 @@
 [![Build Status](https://travis-ci.org/ozra/mmap-io.svg?branch=master)](https://travis-ci.org/ozra/mmap-io)
 
-# Mmap for Io.js / Node.js
-mmap(2) / madvise(2) / msync(2) / mincore(2) for io.js / node.js revisited.
+# Mmap for Node.js
+mmap(2) / madvise(2) / msync(2) / mincore(2) for node.js revisited.
 
-I needed shared memory mapping and came across @bnoordhuis module [node-mmap](https://github.com/bnoordhuis/node-mmap), only to find that it didn't work with later versions of io.js (and compatibles). So out of need I threw this together along with the functionality I found was missing in the node-mmap: advice and sync.
+I needed shared memory mapping and came across @bnoordhuis module [node-mmap](https://github.com/bnoordhuis/node-mmap), only to find that it didn't work with later versions of io.js, node.js and compatibles. So out of need I threw this together along with the functionality I found was missing in the node-mmap: advice and sync.
 
-Strong temptations to re-order arguments to something more sane was kept at bay, and I kept it as mmap(2) and node-mmap for compatibility. Notable difference is the additional optional argument to pass a usage advise in the mapping stage. I've given advise and sync more practical arguments, out of an io.js perspective, than their C/C++ counterparts.
+Strong temptations to re-order arguments to something more sane was kept at bay, and I kept it as mmap(2) and node-mmap for compatibility. Notable difference is the additional optional argument to pass a usage advise in the mapping stage. I've given advise and sync more practical arguments, out of a node.js perspective, compared to their C/C++ counterparts.
 
-The flag constants have the same crooked names as in C/C++ to make it straight forward for the user to google the net and relate to man-pages.
+The flag constants have crooked names from C/C++ retained in order to make it straight forward for the user to search the net, and relate to man-pages.
 
 This is my first node.js addon and after hours wasted reading up on V8 API I luckily stumbled upon [Native Abstractions for Node](https://github.com/rvagg/nan). Makes life so much easier. Hot tip!
 
-_mmap-io_ is written in C++11 and [LiveScript](https://github.com/gkz/LiveScript).
+_mmap-io_ is written in C++11 and ~~[LiveScript](https://github.com/gkz/LiveScript)~~ — _although I love LS, it's more prudent to use TypeScript for a library, so I've rewritten that code._
 
-It should be noted that mem-mapping is by nature potentially blocking, and _should not be used in concurrent serving/processing applications_, but rather has it's niche where multiple processes are working on the same giant sets of data (thereby sparing physical memory, and load times if the kernel does it's job for read ahead), preferably multiple readers and single or none concurrent writer, to not spoil the gains by shitloads of mutexes. And your noble specific use case ofcourse.
+It should be noted that mem-mapping is by nature potentially blocking, and _should not be used in concurrent serving/processing applications_, but rather has it's niche where multiple processes are working on the same giant sets of data (thereby sparing physical memory, and load times if the kernel does it's job for read ahead), preferably multiple readers and single or none concurrent writer, to not spoil the gains by shitloads of spin-locks, mutexes or such. And your noble specific use case of course.
 
 
 # News and Updates
+
+### 2019-03-08: version 1.1.0
+- rewrote the es part of the _lib_ code from LiveScript to TypeScript. The
+  prudent thing to do in a lib. The test remains in LS.
+- `offs_t` changed to `size_t` because of bitwidth goofyness. Thanks to @bmarkiv
+- removed dependency on GNU Make by adding build commands to "package.json".
+  Might help those on windows platform who didn't have it installed. However
+  they still rely on a horde of "common posix utils", so your setup might be
+  lacking anyway then.
+- _note that there are some compile warnings because of changes in C++ API's in
+  NAN/V8, ignored for now in contemplation whether to switch to node-addon-api
+  (napi for C++), since call overhead isn't an issue in this library, everything
+  considered.
+
 ### 2018-01-16: version 1.0.0
 - bumped the version to 1.0.0 since, well, why not.
 - changed deprecated calls from `ForceSet` to `DefineOwnProperty`
@@ -41,8 +55,8 @@ It should be noted that mem-mapping is by nature potentially blocking, and _shou
 - Windows compatibility added. Thanks to @toxicwolf
 - Rewrote the bindings to Nan 2.0.9 API version (V8/io/Node hell...)
     + Had to remove the error _codes_ to get it working in the time I had
-      available (or rather - didn't have..) -
-      error messages are still there - with code in message instead. Though,
+      available (or rather - didn't have..) —
+      error messages are still there — with code in message instead. Though,
       usually nothing goes wrong, so only the test cares ;-)
 - Added some helpful targets in Makefile `human_errors`, `ls` only, `build`
   only, etc. (useful if you wanna hack the module)
@@ -123,7 +137,7 @@ core-stats = mmap.incore buffer
 ### Good to Know (TM)
 
 - Checkout man pages mmap(2), madvise(2), msync(2), mincore(2) for more detailed intell.
-- The mappings is automatically unmapped when the buffer is garbage collected.
+- The mappings are automatically unmapped when the buffer is garbage collected.
 - Write-mappings need the fd to be opened with "r+", or you'll get a permission error (13).
 - If you make a read-only mapping and then ignorantly set a value in the buffer, all hell previously unknown to a JS'er breaks loose (segmentation fault). It is possible to write some devilous code to intercept the SIGSEGV and throw an exception, but let's not do that!
 - `Offset`, and in some cases `length` needs to be a multiple of mmap-io.PAGESIZE (which commonly is 4096)
@@ -139,7 +153,10 @@ core-stats = mmap.incore buffer
 - Have a look at surrounding code for style and follow that
     - 4 spaces indent
     - 12 spaces initial indent for function bodies in the C++ code
-
+        - Yeah it was a "feel it out" of the moment, I'll leave it there.
+- _Please_, when writing an issue or making a PR: tag my handle `@ozra`, so that
+  GitHub adds a notification to the _"participating" list_ (less risk I miss it)
+    `
 
 # Tests
 ```

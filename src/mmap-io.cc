@@ -38,263 +38,283 @@ struct MMap {
 
 
 void do_mmap_cleanup(char* data, void* hint) {
-            auto map_info = static_cast<MMap*>(hint);
-            munmap(data, map_info->size);
-            delete map_info;
+    auto map_info = static_cast<MMap*>(hint);
+    munmap(data, map_info->size);
+    delete map_info;
 }
 
 inline int do_mmap_advice(char* addr, size_t length, int advise) {
-            return madvise(static_cast<void*>(addr), length, advise);
+    return madvise(static_cast<void*>(addr), length, advise);
 }
 
 JS_FN(mmap_map) {
-            Nan::HandleScope();
+    Nan::HandleScope();
 
-            if (info.Length() < 4 && info.Length() > 6) {
-                return Nan::ThrowError(
-                    "map() takes 4, 5 or 6 arguments: (size :int, protection :int, flags :int, fd :int [, offset :int [, advise :int]])."
-                );
-            }
+    if (info.Length() < 4 && info.Length() > 6) {
+        return Nan::ThrowError(
+            "map() takes 4, 5 or 6 arguments: (size :int, protection :int, flags :int, fd :int [, offset :int [, advise :int]])."
+        );
+    }
 
-            // Try to be a little (motherly) helpful to us poor clueless developers
-            if (!info[0]->IsNumber())    return Nan::ThrowError("mmap: size (arg[0]) must be an integer");
-            if (!info[1]->IsNumber())    return Nan::ThrowError("mmap: protection_flags (arg[1]) must be an integer");
-            if (!info[2]->IsNumber())    return Nan::ThrowError("mmap: flags (arg[2]) must be an integer");
-            if (!info[3]->IsNumber())    return Nan::ThrowError("mmap: fd (arg[3]) must be an integer (a file descriptor)");
-            // Offset and advise are optional
+    // Try to be a little (motherly) helpful to us poor clueless developers
+    if (!info[0]->IsNumber())    return Nan::ThrowError("mmap: size (arg[0]) must be an integer");
+    if (!info[1]->IsNumber())    return Nan::ThrowError("mmap: protection_flags (arg[1]) must be an integer");
+    if (!info[2]->IsNumber())    return Nan::ThrowError("mmap: flags (arg[2]) must be an integer");
+    if (!info[3]->IsNumber())    return Nan::ThrowError("mmap: fd (arg[3]) must be an integer (a file descriptor)");
+    // Offset and advise are optional
 
-            constexpr void* hinted_address  = nullptr;  // Just making things uber-clear...
-            const size_t    size            = Nan::To<int>(info[0]).FromJust(); //ToInteger()->Value();   // ToUint64()->Value();
-            const int       protection      = info[1]->IntegerValue();
-            const int       flags           = info[2]->ToInteger()->Value();
-            const int       fd              = info[3]->ToInteger()->Value();
-            const size_t    offset          = info[4]->ToInteger()->Value();   // ToInt64()->Value();
-            const int       advise          = info[5]->ToInteger()->Value();
+    constexpr void* hinted_address  = nullptr;  // Just making things uber-clear...
+    const size_t    size            = Nan::To<int>(info[0]).FromJust(); //ToInteger()->Value();   // ToUint64()->Value();
+    const int       protection      = info[1]->IntegerValue();
+    const int       flags           = info[2]->ToInteger()->Value();
+    const int       fd              = info[3]->ToInteger()->Value();
+    const size_t    offset          = info[4]->ToInteger()->Value();   // ToInt64()->Value();
+    const int       advise          = info[5]->ToInteger()->Value();
 
-            char* data = static_cast<char*>( mmap( hinted_address, size, protection, flags, fd, offset) );
+    char* data = static_cast<char*>( mmap( hinted_address, size, protection, flags, fd, offset) );
 
-            if (data == MAP_FAILED) {
-                return Nan::ThrowError((std::string("mmap failed, ") + std::to_string(errno)).c_str());
-            }
-            else {
-                if (advise != 0) {
-                    auto ret = do_mmap_advice(data, size, advise);
-                    if (ret) {
-                        return Nan::ThrowError((std::string("madvise() failed, ") + std::to_string(errno)).c_str());
-                    }
-
-                //     // Asynchronous read-ahead to minimisze blocking. This
-                //     // has worked flawless, but is not necessary, and any
-                //     // gains are speculative.
-                //     //
-                //     // Play with it if you want to.
-                //     //
-                //     std::async(std::launch::async, [=](){
-                //         auto ret = do_mmap_advice(data, size, advise);
-                //         if (ret) {
-                //             return Nan::ThrowError((std::string("madvise() failed, ") + std::to_string(errno)).c_str());
-                //         }
-                //         readahead(fd, offset, 1024 * 1024 * 4);
-                //     });
-
-                }
-
-                auto map_info = new MMap(data, size);
-				Nan::MaybeLocal<Object> buf = node::Buffer::New(
-					v8::Isolate::GetCurrent(), data, size, do_mmap_cleanup, static_cast<void*>(map_info));
-                if (buf.IsEmpty()) {
-                    return Nan::ThrowError(std::string("couldn't allocate Node Buffer()").c_str());
-                } else {
-                    info.GetReturnValue().Set(buf.ToLocalChecked());
-                }
-            }
-}
-
-JS_FN(mmap_advise) {
-            Nan::HandleScope();
-
-            if (info.Length() != 2 && info.Length() != 4) {
-                return Nan::ThrowError(
-                    "advise() takes 2 or 4 arguments: (buffer :Buffer, advise :int) | (buffer :Buffer, offset :int, length :int, advise :int)."
-                );
-            }
-            if (!info[0]->IsObject())    return Nan::ThrowError("advice(): buffer (arg[0]) must be a Buffer");
-            if (!info[1]->IsNumber())    return Nan::ThrowError("advice(): (arg[1]) must be an integer");
-
-            Local<Object>   buf     = info[0]->ToObject();
-            char*           data    = node::Buffer::Data(buf);
-            size_t          size    = node::Buffer::Length(buf);
-            int ret;
-
-            if (info.Length() == 2) {
-                int advise = info[1]->ToInteger()->Value();
-                ret = do_mmap_advice(data, size, advise);
-            }
-            else {
-                int offset = info[1]->ToInteger()->Value();
-                int length = info[2]->ToInteger()->Value();
-                int advise = info[3]->ToInteger()->Value();
-                ret = do_mmap_advice(data + offset, length, advise);
-            }
+    if (data == MAP_FAILED) {
+        return Nan::ThrowError((std::string("mmap failed, ") + std::to_string(errno)).c_str());
+    }
+    else {
+        if (advise != 0) {
+            auto ret = do_mmap_advice(data, size, advise);
             if (ret) {
                 return Nan::ThrowError((std::string("madvise() failed, ") + std::to_string(errno)).c_str());
             }
 
-            //Nan::ReturnUndefined();
+        //     // Asynchronous read-ahead to minimisze blocking. This
+        //     // has worked flawless, but is not necessary, and any
+        //     // gains are speculative.
+        //     //
+        //     // Play with it if you want to.
+        //     //
+        //     std::async(std::launch::async, [=](){
+        //         auto ret = do_mmap_advice(data, size, advise);
+        //         if (ret) {
+        //             return Nan::ThrowError((std::string("madvise() failed, ") + std::to_string(errno)).c_str());
+        //         }
+        //         readahead(fd, offset, 1024 * 1024 * 4);
+        //     });
+
+        }
+
+        auto map_info = new MMap(data, size);
+        Nan::MaybeLocal<Object> buf = node::Buffer::New(
+            v8::Isolate::GetCurrent(), data, size, do_mmap_cleanup, static_cast<void*>(map_info));
+        if (buf.IsEmpty()) {
+            return Nan::ThrowError(std::string("couldn't allocate Node Buffer()").c_str());
+        } else {
+            info.GetReturnValue().Set(buf.ToLocalChecked());
+        }
+    }
+}
+
+JS_FN(mmap_advise) {
+    Nan::HandleScope();
+
+    if (info.Length() != 2 && info.Length() != 4) {
+        return Nan::ThrowError(
+            "advise() takes 2 or 4 arguments: (buffer :Buffer, advise :int) | (buffer :Buffer, offset :int, length :int, advise :int)."
+        );
+    }
+    if (!info[0]->IsObject())    return Nan::ThrowError("advice(): buffer (arg[0]) must be a Buffer");
+    if (!info[1]->IsNumber())    return Nan::ThrowError("advice(): (arg[1]) must be an integer");
+
+    Local<Object>   buf     = info[0]->ToObject();
+    char*           data    = node::Buffer::Data(buf);
+    size_t          size    = node::Buffer::Length(buf);
+    int ret;
+
+    if (info.Length() == 2) {
+        int advise = info[1]->ToInteger()->Value();
+        ret = do_mmap_advice(data, size, advise);
+    }
+    else {
+        int offset = info[1]->ToInteger()->Value();
+        int length = info[2]->ToInteger()->Value();
+        int advise = info[3]->ToInteger()->Value();
+        ret = do_mmap_advice(data + offset, length, advise);
+    }
+    if (ret) {
+        return Nan::ThrowError((std::string("madvise() failed, ") + std::to_string(errno)).c_str());
+    }
+
+    //Nan::ReturnUndefined();
 }
 
 JS_FN(mmap_incore) {
-            Nan::HandleScope();
+    Nan::HandleScope();
 
-            if (info.Length() != 1) {
-                return Nan::ThrowError(
-                    "incore() takes 1 argument: (buffer :Buffer) ."
-                );
-            }
+    if (info.Length() != 1) {
+        return Nan::ThrowError(
+            "incore() takes 1 argument: (buffer :Buffer) ."
+        );
+    }
 
-            if (!info[0]->IsObject())    return Nan::ThrowError("advice(): buffer (arg[0]) must be a Buffer");
+    if (!info[0]->IsObject())    return Nan::ThrowError("advice(): buffer (arg[0]) must be a Buffer");
 
-            Local<Object>   buf     = info[0]->ToObject();
-            char*           data    = node::Buffer::Data(buf);
-            size_t          size    = node::Buffer::Length(buf);
+    Local<Object>   buf     = info[0]->ToObject();
+    char*           data    = node::Buffer::Data(buf);
+    size_t          size    = node::Buffer::Length(buf);
 
 #ifdef _WIN32
-            SYSTEM_INFO sysinfo;
-            GetSystemInfo(&sysinfo);
-            size_t          page_size = sysinfo.dwPageSize;
+    SYSTEM_INFO sysinfo;
+    GetSystemInfo(&sysinfo);
+    size_t          page_size = sysinfo.dwPageSize;
 #else
-            size_t          page_size = sysconf(_SC_PAGESIZE);
+    size_t          page_size = sysconf(_SC_PAGESIZE);
 #endif
 
-            size_t          needed_bytes = (size+page_size-1) / page_size;
-            size_t          pages = size / page_size;
+    size_t          needed_bytes = (size+page_size-1) / page_size;
+    size_t          pages = size / page_size;
 
 #ifdef __APPLE__
-            char*  resultData = (char *)malloc(needed_bytes);
+    char*  resultData = (char *)malloc(needed_bytes);
 #else
-            unsigned char*  resultData = (unsigned char *)malloc(needed_bytes);
+    unsigned char*  resultData = (unsigned char *)malloc(needed_bytes);
 #endif
 
-            if (size % page_size > 0) {
-                pages++;
-            }
+    if (size % page_size > 0) {
+        pages++;
+    }
 
-            int ret = mincore(data, size, resultData);
+    int ret = mincore(data, size, resultData);
 
-            if (ret) {
-                free(resultData);
-                if (errno == ENOSYS) {
-                    return Nan::ThrowError("mincore() not implemented");
-                } else {
-                    return Nan::ThrowError((std::string("mincore() failed, ") + std::to_string(errno)).c_str());
-                }
-            }
+    if (ret) {
+        free(resultData);
+        if (errno == ENOSYS) {
+            return Nan::ThrowError("mincore() not implemented");
+        } else {
+            return Nan::ThrowError((std::string("mincore() failed, ") + std::to_string(errno)).c_str());
+        }
+    }
 
-            // Now we want to check all of the pages
-            uint32_t pages_mapped = 0;
-            uint32_t pages_unmapped = 0;
+    // Now we want to check all of the pages
+    uint32_t pages_mapped = 0;
+    uint32_t pages_unmapped = 0;
 
-            for(size_t i = 0; i < pages; i++) {
-                if(!(resultData[i] & 0x1)) {
-                    pages_unmapped++;
-                } else {
-                    pages_mapped++;
-                }
-            }
+    for(size_t i = 0; i < pages; i++) {
+        if(!(resultData[i] & 0x1)) {
+            pages_unmapped++;
+        } else {
+            pages_mapped++;
+        }
+    }
 
-            free(resultData);
+    free(resultData);
 
-            v8::Local<v8::Array> arr = Nan::New<v8::Array>(2);
-            Nan::Set(arr, 0, Nan::New(pages_unmapped));
-            Nan::Set(arr, 1, Nan::New(pages_mapped));
-            info.GetReturnValue().Set(arr);
+    v8::Local<v8::Array> arr = Nan::New<v8::Array>(2);
+    Nan::Set(arr, 0, Nan::New(pages_unmapped));
+    Nan::Set(arr, 1, Nan::New(pages_mapped));
+    info.GetReturnValue().Set(arr);
 }
 
 JS_FN(mmap_sync_lib_private_) {
-            Nan::HandleScope();
+    Nan::HandleScope();
 
-            // I barfed at the thought of implementing all variants of info-combos in C++, so
-            // the arg-shuffling and checking is done in a ES wrapper function - see "mmap-io.ls"
-            if (info.Length() != 5) {
-                return Nan::ThrowError(
-                    "sync() takes 5 arguments: (buffer :Buffer, offset :int, length :int, do_blocking_sync :bool, invalidate_pages_and_signal_refresh_to_consumers :bool)."
-                );
-            }
+    // I barfed at the thought of implementing all variants of info-combos in C++, so
+    // the arg-shuffling and checking is done in a ES wrapper function - see "mmap-io.ts"
+    if (info.Length() != 5) {
+        return Nan::ThrowError(
+            "sync() takes 5 arguments: (buffer :Buffer, offset :int, length :int, do_blocking_sync :bool, invalidate_pages_and_signal_refresh_to_consumers :bool)."
+        );
+    }
 
-            if (!info[0]->IsObject())    return Nan::ThrowError("sync(): buffer (arg[0]) must be a Buffer");
+    if (!info[0]->IsObject())    return Nan::ThrowError("sync(): buffer (arg[0]) must be a Buffer");
 
-            Local<Object>   buf             = info[0]->ToObject();
-            char*           data            = node::Buffer::Data(buf);
+    Local<Object>   buf             = info[0]->ToObject();
+    char*           data            = node::Buffer::Data(buf);
 
-            int             offset          = info[1]->ToInteger()->Value();
-            size_t          length          = info[2]->ToInteger()->Value();
-            bool            blocking_sync   = info[3]->ToBoolean()->Value();
-            bool            invalidate      = info[4]->ToBoolean()->Value();
-            int             flags           = ( (blocking_sync ? MS_SYNC : MS_ASYNC) | (invalidate ? MS_INVALIDATE : 0) );
+    int             offset          = info[1]->ToInteger()->Value();
+    size_t          length          = info[2]->ToInteger()->Value();
+    bool            blocking_sync   = info[3]->ToBoolean()->Value();
+    bool            invalidate      = info[4]->ToBoolean()->Value();
+    int             flags           = ( (blocking_sync ? MS_SYNC : MS_ASYNC) | (invalidate ? MS_INVALIDATE : 0) );
 
-            int ret = msync(data + offset, length, flags);
+    int ret = msync(data + offset, length, flags);
 
-            if (ret) {
-                return Nan::ThrowError((std::string("msync() failed, ") + std::to_string(errno)).c_str());
-            }
-            //Nan::ReturnUndefined();
+    if (ret) {
+        return Nan::ThrowError((std::string("msync() failed, ") + std::to_string(errno)).c_str());
+    }
+    //Nan::ReturnUndefined();
 }
 
 
 NAN_MODULE_INIT(Init) {
-            auto exports = target;
-            constexpr auto property_attrs = static_cast<PropertyAttribute>(ReadOnly | DontDelete);
-            using JsFnType = decltype(mmap_map);
+    auto exports = target;
 
-            auto set_int_prop = [&](const char* key, int val) -> void {
-                Nan::DefineOwnProperty(exports, Nan::New(key).ToLocalChecked(), Nan::New(val), property_attrs);
-            };
+    constexpr auto property_attrs = static_cast<PropertyAttribute>(
+        ReadOnly | DontDelete
+    );
 
-            auto set_fn_prop = [&](const char* key, JsFnType fn) -> void {
-                Nan::DefineOwnProperty(exports, Nan::New(key).ToLocalChecked(), Nan::New<FunctionTemplate>(fn)->GetFunction(), property_attrs);
-            };
+    using JsFnType = decltype(mmap_map);
 
-            set_int_prop("PROT_READ", PROT_READ);
-            set_int_prop("PROT_WRITE", PROT_WRITE);
-            set_int_prop("PROT_EXEC", PROT_EXEC);
-            set_int_prop("PROT_NONE", PROT_NONE);
+    auto set_int_prop = [&](const char* key, int val) -> void {
+        Nan::DefineOwnProperty(
+            exports,
+            Nan::New(key).ToLocalChecked(),
+            Nan::New(val),
+            property_attrs
+        );
+    };
 
-            set_int_prop("MAP_SHARED", MAP_SHARED);
-            set_int_prop("MAP_PRIVATE", MAP_PRIVATE);
+    auto set_fn_prop = [&](const char* key, JsFnType fn) -> void {
+        Nan::DefineOwnProperty(
+            exports,
+            Nan::New(key).ToLocalChecked(),
+            Nan::New<FunctionTemplate>(fn)->GetFunction(),
+            property_attrs
+        );
+    };
+
+    set_int_prop("PROT_READ", PROT_READ);
+    set_int_prop("PROT_WRITE", PROT_WRITE);
+    set_int_prop("PROT_EXEC", PROT_EXEC);
+    set_int_prop("PROT_NONE", PROT_NONE);
+
+    set_int_prop("MAP_SHARED", MAP_SHARED);
+    set_int_prop("MAP_PRIVATE", MAP_PRIVATE);
 
 #ifdef MAP_NONBLOCK
-            set_int_prop("MAP_NONBLOCK", MAP_NONBLOCK);
+    set_int_prop("MAP_NONBLOCK", MAP_NONBLOCK);
 #endif
 
 #ifdef MAP_POPULATE
-            set_int_prop("MAP_POPULATE", MAP_POPULATE);
+    set_int_prop("MAP_POPULATE", MAP_POPULATE);
 #endif
 
-            set_int_prop("MADV_NORMAL", MADV_NORMAL);
-            set_int_prop("MADV_RANDOM", MADV_RANDOM);
-            set_int_prop("MADV_SEQUENTIAL", MADV_SEQUENTIAL);
-            set_int_prop("MADV_WILLNEED", MADV_WILLNEED);
-            set_int_prop("MADV_DONTNEED", MADV_DONTNEED);
+    set_int_prop("MADV_NORMAL", MADV_NORMAL);
+    set_int_prop("MADV_RANDOM", MADV_RANDOM);
+    set_int_prop("MADV_SEQUENTIAL", MADV_SEQUENTIAL);
+    set_int_prop("MADV_WILLNEED", MADV_WILLNEED);
+    set_int_prop("MADV_DONTNEED", MADV_DONTNEED);
 
-            //set_int_prop("MS_ASYNC", MS_ASYNC);
-            //set_int_prop("MS_SYNC", MS_SYNC);
-            //set_int_prop("MS_INVALIDATE", MS_INVALIDATE);
+    //set_int_prop("MS_ASYNC", MS_ASYNC);
+    //set_int_prop("MS_SYNC", MS_SYNC);
+    //set_int_prop("MS_INVALIDATE", MS_INVALIDATE);
 
 #ifdef _WIN32
-            SYSTEM_INFO sysinfo;
-            GetSystemInfo(&sysinfo);
-            set_int_prop("PAGESIZE", sysinfo.dwPageSize);
+    SYSTEM_INFO sysinfo;
+    GetSystemInfo(&sysinfo);
+    set_int_prop("PAGESIZE", sysinfo.dwPageSize);
 #else
-            set_int_prop("PAGESIZE", sysconf(_SC_PAGESIZE));
+    set_int_prop("PAGESIZE", sysconf(_SC_PAGESIZE));
 #endif
 
 
-            set_fn_prop("map", mmap_map);
-            set_fn_prop("advise", mmap_advise);
-            set_fn_prop("incore", mmap_incore);
-            // This one is wrapped by a JS-function and deleted from obj to hide from user
-            // *TODO* perhaps call is sync so that we simply can drop in to the sync-name in JS, no deleting
-            set_fn_prop("sync_lib_private__", mmap_sync_lib_private_);
+    set_fn_prop("map", mmap_map);
+    set_fn_prop("advise", mmap_advise);
+    set_fn_prop("incore", mmap_incore);
+
+    // This one is wrapped by a JS-function and deleted from obj to hide from user
+    Nan::DefineOwnProperty(
+        exports,
+        Nan::New("sync_lib_private__").ToLocalChecked(),
+        Nan::New<FunctionTemplate>(mmap_sync_lib_private_)->GetFunction(),
+        static_cast<PropertyAttribute>(0)
+    );
+
 
 }
 

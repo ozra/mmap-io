@@ -1,6 +1,6 @@
 {
     "name": "mmap-io",
-    "version": "1.0.0",
+    "version": "1.1.0",
     "license": "MIT",
     "author": {
         "name": "Oscar Campbell",
@@ -28,22 +28,23 @@
         "url": "http://github.com/ozra/mmap-io/issues"
     },
     "scripts": {
-        "prepare": "lsc -b -c -o ./ src/mmap-io.ls src/test.ls",
-        "install": "node-gyp configure && node-gyp rebuild",
-        "postinstall": "make ls",
-        "test": "node ./test.js"
+        "clean": "rm -rf build ./build/es-release/mmap-io.d.ts",
+        "build": "yarn build-addon && yarn build-es && yarn test",
+        "build-addon": "node-gyp configure && node-gyp rebuild",
+        "build-es": "./node_modules/typescript/bin/tsc && cp ./build/es-release/mmap-io.d.ts ./",
+        "prepublish": "yarn build",
+        "install": "yarn build-addon",
+        "test": "./node_modules/livescript/bin/lsc -o ./build/es-release/ -b -c ./src/test.ls && ((which nodejs && nodejs ./build/es-release/test.js) || node ./build/es-release/test.js)",
+        "watch": "while true; do (yarn build; inotifywait -qre close_write,moved_to --exclude '\\.git' ./src/; ) done;"
     },
     "devDependencies": {
         "errno": "*",
-        "livescript": "^1.5.0"
+        "typescript": "^3.3.3333"
     },
     "dependencies": {
-        "bindings": "^1.3.0",
-        "livescript": "^1.5.0",
-        "nan": "^2.8.0"
-    },
-    "main": "mmap-io",
-    "engines": {
-        "node": ">=0.10.0"
+        "@types/node": "^11.10.5",
+        "bindings": "^1.5.0",
+        "livescript": "^1.6.0",
+        "nan": "^2.12.1"
     }
 }
