@@ -37,6 +37,7 @@
         "test": "./node_modules/livescript/bin/lsc -o ./build/es-release/ -b -c ./src/test.ls && ((which nodejs && nodejs ./build/es-release/test.js) || node ./build/es-release/test.js)",
         "watch": "while true; do (yarn build; inotifywait -qre close_write,moved_to --exclude '\\.git' ./src/; ) done;"
     },
+  "main": "mmap-io",
     "devDependencies": {
         "errno": "*",
         "typescript": "^3.3.3333"
