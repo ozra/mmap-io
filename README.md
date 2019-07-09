@@ -109,7 +109,7 @@ fd-w = fs.open-sync some-file, "r+"
 # - `[blah]` denotes optional argument
 # - `foo = x` denotes default value for argument
 
-size = fs.stat-sync(fd).size
+size = fs.fstat-sync(fd).size
 rx-prot = mmap.PROT_READ .|. mmap.PROT_EXECUTE
 priv = mmap.MAP_SHARED
 
