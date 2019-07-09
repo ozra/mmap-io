@@ -18,6 +18,10 @@ It should be noted that mem-mapping is by nature potentially blocking, and _shou
 
 # News and Updates
 
+### 2019-07-09: version 1.1.3
+- rewritten the C++-code to catch up with V8/Nan breaking changes for node.js 12.*, which also removes all warnings in earlier versions.
+- refactored in to wrapper functions for extracting values, so should new breaking changes come in later versions, it will be quicker to adjust.
+
 ### 2019-07-09: version 1.1.1
 - when replacing GNU Make, for some reason I used `yarn` in "package.json" — which may have failed builds for those not having it installed (and then not building "es-release"), and completely missing the point of getting rid of Make
 - updated README to reflect new build command (`npm run build`) (_should only ever be needed if you clone from git and contribute_)
