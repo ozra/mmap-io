@@ -12,6 +12,9 @@ compiler:
   - gcc
   - clang
 
+env:
+  - CXX=g++-7
+
 addons:
   apt:
     sources:
