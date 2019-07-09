@@ -12,13 +12,13 @@ compiler:
   - gcc
   - clang
 
-env:
-  - CXX=g++-7
+# env:
+#   - CXX=g++-7
 
-addons:
-  apt:
-    sources:
-      - ubuntu-toolchain-r-test
-    packages:
-      - g++-7
+# addons:
+#   apt:
+#     sources:
+#       - ubuntu-toolchain-r-test
+#     packages:
+#       - g++-7
 

@@ -9,3 +9,8 @@ node_modules/
 
 # Project / IDE-files
 .vscode/
+
+GPATH
+GRTAGS
+GTAGS
+
