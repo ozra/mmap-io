@@ -299,7 +299,7 @@ JS_FN(mmap_sync_lib_private_) {
 NAN_MODULE_INIT(Init) {
     auto exports = target;
 
-    constexpr auto property_attrs = static_cast<PropertyAttribute>(
+    constexpr auto std_property_attrs = static_cast<PropertyAttribute>(
         ReadOnly | DontDelete
     );
 
@@ -310,16 +310,16 @@ NAN_MODULE_INIT(Init) {
             exports,
             Nan::New(key).ToLocalChecked(),
             Nan::New(val),
-            property_attrs
+            std_property_attrs
         );
     };
 
     auto set_fn_prop = [&](const char* key, JsFnType fn) -> void {
         Nan::DefineOwnProperty(
             exports,
-            Nan::New(key).ToLocalChecked(),
-            Nan::New<FunctionTemplate>(fn)->GetFunction(),
-            property_attrs
+            Nan::New<v8::String>(key).ToLocalChecked(),
+            Nan::GetFunction(Nan::New<FunctionTemplate>(fn)).ToLocalChecked(),
+            std_property_attrs
         );
     };
 
@@ -365,8 +365,8 @@ NAN_MODULE_INIT(Init) {
     // This one is wrapped by a JS-function and deleted from obj to hide from user
     Nan::DefineOwnProperty(
         exports,
-        Nan::New("sync_lib_private__").ToLocalChecked(),
-        Nan::New<FunctionTemplate>(mmap_sync_lib_private_)->GetFunction(),
+        Nan::New<v8::String>("sync_lib_private__").ToLocalChecked(),
+        Nan::GetFunction(Nan::New<FunctionTemplate>(mmap_sync_lib_private_)).ToLocalChecked(),
         static_cast<PropertyAttribute>(0)
     );
 
