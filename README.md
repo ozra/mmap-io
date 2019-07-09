@@ -13,10 +13,16 @@ This is my first node.js addon and after hours wasted reading up on V8 API I luc
 
 _mmap-io_ is written in C++11 and ~~[LiveScript](https://github.com/gkz/LiveScript)~~ — _although I love LS, it's more prudent to use TypeScript for a library, so I've rewritten that code._
 
-It should be noted that mem-mapping is by nature potentially blocking, and _should not be used in concurrent serving/processing applications_, but rather has it's niche where multiple processes are working on the same giant sets of data (thereby sparing physical memory, and load times if the kernel does it's job for read ahead), preferably multiple readers and single or none concurrent writer, to not spoil the gains by shitloads of spin-locks, mutexes or such. And your noble specific use case of course.
+It should be noted that mem-mapping is by nature potentially blocking, and _should not be used in concurrent serving/processing applications_, but rather has it's niche where multiple processes are working on the same giant sets of data (thereby sparing physical memory, and load times if the kernel does it's job for read ahead), preferably multiple readers and single or none concurrent writer, to not spoil the gains by shitloads of spin-locks, mutexes or such. _And your noble specific use case of course._
 
 
 # News and Updates
+
+### 2019-07-09: version 1.1.1
+- when replacing GNU Make, for some reason I used `yarn` in "package.json" — which may have failed builds for those not having it installed (and then not building "es-release"), and completely missing the point of getting rid of Make
+- updated README to reflect new build command (`npm run build`) (_should only ever be needed if you clone from git and contribute_)
+- added back the "main" entry in package.json. Hell of a blunder! Tests changed to import from root so they fail without it.
+- the never before tested example code here in the README, has been ran and corrected, thanks to @LiamKarlMitchell
 
 ### 2019-03-08: version 1.1.0
 - rewrote the es part of the _lib_ code from LiveScript to TypeScript. The
@@ -80,11 +86,8 @@ npm install mmap-io
 ```
 git clone https://github.com/ozra/mmap-io.git
 cd mmap-io
-make
+npm build
 ```
-
-For dev'ing, there are some shell-scripts for just building individual parts, which you might want to have a look at if you start messing with the code. The Makefile is more of "traditional" convenience and does the whole hoola baloo including configuring.
-
 
 
 # Usage
@@ -160,5 +163,5 @@ core-stats = mmap.incore buffer
 
 # Tests
 ```
-make && node ./test.js
+npm test
 ```

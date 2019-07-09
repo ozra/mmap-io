@@ -1,4 +1,4 @@
-import mmap from "./mmap-io"
+import mmap from "../"
 import fs from "fs"
 
 const fd = fs.openSync(__filename, "r+")
