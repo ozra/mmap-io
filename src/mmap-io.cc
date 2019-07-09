@@ -47,6 +47,31 @@ inline int do_mmap_advice(char* addr, size_t length, int advise) {
     return madvise(static_cast<void*>(addr), length, advise);
 }
 
+
+/**
+ * Make it simpler the next time V8 breaks API's and such with a wrapper fn...
+ */
+template <typename T, typename VT>
+inline auto get_v(VT v8_value) -> T {
+    if constexpr (std::is_same<unsigned long, T>::value) {
+        return static_cast<size_t>(Nan::To<int>(v8_value).FromJust());
+    } else {
+        return Nan::To<T>(v8_value).FromJust();
+    }
+}
+
+/**
+ * Make it simpler the next time V8 breaks API's and such with a wrapper fn...
+ */
+template <typename T, typename VT>
+inline auto get_v(VT v8_value, T default_value) -> T {
+    if constexpr (std::is_same<unsigned long, T>::value) {
+        return static_cast<size_t>(Nan::To<int>(v8_value).FromMaybe(static_cast<int>(default_value)));
+    } else {
+        return Nan::To<T>(v8_value).FromMaybe(default_value);
+    }
+}
+
 JS_FN(mmap_map) {
     Nan::HandleScope();
 
@@ -64,12 +89,12 @@ JS_FN(mmap_map) {
     // Offset and advise are optional
 
     constexpr void* hinted_address  = nullptr;  // Just making things uber-clear...
-    const size_t    size            = Nan::To<int>(info[0]).FromJust(); //ToInteger()->Value();   // ToUint64()->Value();
-    const int       protection      = info[1]->IntegerValue();
-    const int       flags           = info[2]->ToInteger()->Value();
-    const int       fd              = info[3]->ToInteger()->Value();
-    const size_t    offset          = info[4]->ToInteger()->Value();   // ToInt64()->Value();
-    const int       advise          = info[5]->ToInteger()->Value();
+    const size_t    size            = get_v<size_t>(info[0]);
+    const int       protection      = get_v<int>(info[1]);
+    const int       flags           = get_v<int>(info[2]);
+    const int       fd              = get_v<int>(info[3]);
+    const size_t    offset          = get_v<size_t>(info[4], 0);
+    const int       advise          = get_v<int>(info[5], 0);
 
     char* data = static_cast<char*>( mmap( hinted_address, size, protection, flags, fd, offset) );
 
