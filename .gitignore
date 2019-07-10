@@ -5,6 +5,7 @@ mmap-io.s
 tmp-mmap-file
 
 build/
+dist/
 node_modules/
 
 # Project / IDE-files

@@ -4,7 +4,7 @@
 
 fs =        require "fs"
 os =        require "os"
-mmap =      require "../../"
+mmap =      require "../"
 assert =    require "assert"
 constants = require "constants"
 

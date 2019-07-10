@@ -1,6 +1,6 @@
 {
     "name": "mmap-io",
-    "version": "1.1.4",
+    "version": "1.1.7",
     "license": "MIT",
     "author": {
         "name": "Oscar Campbell",
@@ -31,7 +31,7 @@
     "files": [
         "binding.gyp",
         "LICENSE",
-        "build/es-release",
+        "dist",
         "mmap-io.d.ts",
         "mmap-io.js",
         "package.json",
@@ -40,13 +40,13 @@
         "src"
     ],
     "scripts": {
-        "clean": "rm -rf build ./build/es-release/mmap-io.d.ts",
+        "clean": "rm -rf build dist",
         "build": "npm run build-addon && npm run build-es && npm run test",
         "build-addon": "node-gyp configure && node-gyp rebuild",
-        "build-es": "./node_modules/typescript/bin/tsc && cp ./build/es-release/mmap-io.d.ts ./",
-        "prepublish": "npm run build",
+        "build-es": "./node_modules/typescript/bin/tsc && cp ./dist/mmap-io.d.ts ./",
+        "prepare": "npm run build",
         "install": "npm run build-addon",
-        "test": "./node_modules/livescript/bin/lsc -o ./build/es-release/ -b -c ./src/test.ls && ((which nodejs && nodejs ./build/es-release/test.js) || node ./build/es-release/test.js)",
+        "test": "./node_modules/livescript/bin/lsc -o ./dist/ -b -c ./src/test.ls && ((which nodejs && nodejs ./dist/test.js) || node ./dist/test.js)",
         "watch": "while true; do (npm run build; inotifywait -qre close_write,moved_to --exclude '\\.git' ./src/; ) done;"
     },
     "devDependencies": {

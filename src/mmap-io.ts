@@ -1,4 +1,4 @@
-const mmap_lib_raw_ = require("../../build/Release/mmap-io")
+const mmap_lib_raw_ = require("../build/Release/mmap-io")
 
 type FileDescriptor = number
 

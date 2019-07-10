@@ -18,12 +18,11 @@ It should be noted that mem-mapping is by nature potentially blocking, and _shou
 
 # News and Updates
 
-### 2019-07-09/C: version 1.1.4
-- major "package.json"-fuckups. Unless running build manually, the js-files where never packaged, nor built. Now whitelisted in package.json.
-
-### 2019-07-09/B: version 1.1.3
+### 2019-07-09/B: version 1.1.3, ..., 1.1.6
 - rewritten the C++-code to catch up with V8/Nan breaking changes for node.js 12.*, which also removes all warnings in earlier versions.
 - refactored in to wrapper functions for extracting values, so should new breaking changes come in later versions, it will be quicker to adjust.
+- major "package.json"-fuckups. Unless running build manually, the js-files where never packaged, nor built. Now whitelisted in package.json.
+- major fuckup 2: when they finally where packaged, they we're killed off when the C++ module was rebuilt on installment. So. Finally: js-files are now built to "dist", and the binary into "build". This way the TypeScript and LiveScript aren't required for end user
 
 ### 2019-07-09/A: version 1.1.1
 - when replacing GNU Make, for some reason I used `yarn` in "package.json" — which may have failed builds for those not having it installed (and then not building "es-release"), and completely missing the point of getting rid of Make
