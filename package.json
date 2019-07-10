@@ -1,6 +1,6 @@
 {
     "name": "mmap-io",
-    "version": "1.1.3",
+    "version": "1.1.4",
     "license": "MIT",
     "author": {
         "name": "Oscar Campbell",
@@ -28,6 +28,17 @@
         "url": "http://github.com/ozra/mmap-io/issues"
     },
     "main": "mmap-io.js",
+    "files": [
+        "binding.gyp",
+        "LICENSE",
+        "build/es-release",
+        "mmap-io.d.ts",
+        "mmap-io.js",
+        "package.json",
+        "package-lock.json",
+        "README.md",
+        "src"
+    ],
     "scripts": {
         "clean": "rm -rf build ./build/es-release/mmap-io.d.ts",
         "build": "npm run build-addon && npm run build-es && npm run test",
@@ -39,13 +50,13 @@
         "watch": "while true; do (npm run build; inotifywait -qre close_write,moved_to --exclude '\\.git' ./src/; ) done;"
     },
     "devDependencies": {
-        "errno": "*",
-        "typescript": "^3.5.3"
+        "@types/node": "^11.10.5",
+        "typescript": "^3.5.3",
+        "livescript": "^1.6.0"
     },
     "dependencies": {
-        "@types/node": "^11.10.5",
+        "errno": "*",
         "bindings": "^1.5.0",
-        "livescript": "^1.6.0",
         "nan": "^2.14.0"
     }
 }

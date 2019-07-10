@@ -2,15 +2,26 @@ const mmap_lib_raw_ = require("../../build/Release/mmap-io")
 
 type FileDescriptor = number
 
-type MapProtectionFlags = 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | number
+type MapProtectionFlags =
+    | MmapIo["PROT_NONE"] // 0
+    | MmapIo["PROT_READ"] // 1
+    | MmapIo["PROT_WRITE"] // 2
+    | MmapIo["PROT_EXEC"] // 4
+    | 3 // R+W
+    | 5 // R+X
+    | 6 // W+X
+    | 7 // R+W+X
 
-// TODO: neat shit!
-type MapProtectionFlagsList = Array<
-    | MmapIo["PROT_NONE"]
-    | MmapIo["PROT_READ"]
-    | MmapIo["PROT_WRITE"]
-    | MmapIo["PROT_EXEC"]
->
+// making `map` a wrapper around the C++ `map`-implementation and allowing an
+// array of flags would be clean, perfectly literally typed, and the dirtier
+// binary-or can be done in the wrapper.
+//
+// type MapProtectionFlagsList = Array<
+//     | MmapIo["PROT_NONE"]
+//     | MmapIo["PROT_READ"]
+//     | MmapIo["PROT_WRITE"]
+//     | MmapIo["PROT_EXEC"]
+// >
 
 type MapFlags =
     | MmapIo["MAP_PRIVATE"]
@@ -29,7 +40,7 @@ type MapAdvise =
 type MmapIo = {
     map(
         size: number,
-        protection: MapProtectionFlagsList | MapProtectionFlags,
+        protection: MapProtectionFlags,
         flags: MapFlags,
         fd: FileDescriptor,
         offset?: number,
@@ -61,10 +72,10 @@ type MmapIo = {
         invalidate_pages?: boolean
     ): void
 
-    readonly PROT_READ: 1 // & ProtTag
-    readonly PROT_WRITE: 2 // & ProtTag
-    readonly PROT_EXEC: 4 // & ProtTag
-    readonly PROT_NONE: 0 // & ProtTag
+    readonly PROT_READ: 1
+    readonly PROT_WRITE: 2
+    readonly PROT_EXEC: 4
+    readonly PROT_NONE: 0
     readonly MAP_SHARED: 1
     readonly MAP_PRIVATE: 2
     readonly MAP_NONBLOCK: 65536
