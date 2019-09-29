@@ -373,4 +373,4 @@ NAN_MODULE_INIT(Init) {
 
 }
 
-NODE_MODULE(mmap_io, Init)
+NAN_MODULE_WORKER_ENABLED(mmap_io, Init);
