@@ -117,11 +117,11 @@ JS_FN(mmap_map) {
     // Offset and advise are optional
 
     constexpr void* hinted_address  = nullptr;  // Just making things uber-clear...
-    const size_t    size            = static_cast<size_t>(get_v<int>(info[0]));
+    const size_t    size            = static_cast<size_t>(get_v<off_t>(info[0]));
     const int       protection      = get_v<int>(info[1]);
     const int       flags           = get_v<int>(info[2]);
     const int       fd              = get_v<int>(info[3]);
-    const size_t    offset          = static_cast<size_t>(get_v<int>(info[4], 0));
+    const off_t     offset          = get_v<off_t>(info[4], 0);
     const int       advise          = get_v<int>(info[5], 0);
 
     char* data = static_cast<char*>( mmap( hinted_address, size, protection, flags, fd, offset) );
